@@ -1,4 +1,4 @@
-syntax = "proto2";
+syntax = "proto3";
 
 package hello;
 
@@ -22,7 +22,7 @@ message HelloRequest {
 }
 
 // The response message containing the greetings
-message HelloReply {
+message HelloResponse {
   string message = 1;
 }
 
