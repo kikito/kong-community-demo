@@ -1,0 +1,37 @@
+_format_version: "1.1"
+services:
+- host: http-echo
+  port: 8080
+  routes:
+  - protocols:
+    - http
+    paths:
+    - /
+    plugins:
+    - name: pre-function
+      config:
+        access:
+        - kong.log("In pre-function access")
+        - |
+           kong.log("Checking custom auth")
+           -- Get list of request headers
+           local custom_auth = kong.request.get_header("x-custom-auth")
+
+           -- Terminate request early if the custom authentication header
+           -- does not exist
+           if not custom_auth then
+             return kong.response.exit(401, "Invalid Credentials")
+           end
+
+           -- Remove custom authentication header from request
+           kong.service.request.clear_header('x-custom-auth')
+        header_filter:
+        - kong.log("In pre-function header_filter")
+        body_filter:
+        - kong.log("In pre-function body_filter")
+        log:
+        - kong.log("In pre-function log")
+
+        # old format
+        # functions: ...
+

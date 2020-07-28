@@ -1,0 +1,52 @@
+version: '3'
+
+networks:
+  kong-net:
+
+
+services:
+  # Kubernetes echo service, it just returns the requests it receives as responses
+  # This service will act as our http upstream
+  http-echo:
+    image: gcr.io/kubernetes-e2e-test-images/echoserver:2.2
+    networks:
+      - kong-net
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: curl -sS http://127.0.0.1:8080 || exit 1
+      interval: 5s
+      timeout: 10s
+      retries: 3
+
+  # Our Kong API gateway
+  # It expects a conf file in ./kong.yml for declarative configuration
+  kong:
+    image: kong/kong:2.1.0
+    networks:
+      - kong-net
+    environment:
+      KONG_LOG_LEVEL: debug
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/pwd/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+    volumes:
+      - "$PWD:/usr/local/kong/pwd"
+    ports:
+      - "8000:8000/tcp"
+      - "8001:8001/tcp"
+      - "8500:8500/tcp"
+      - "8443:8443/tcp"
+      - "8444:8444/tcp"
+    depends_on:
+      - http-echo
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+

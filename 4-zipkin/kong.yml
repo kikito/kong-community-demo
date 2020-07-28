@@ -1,0 +1,20 @@
+# kong.yml
+
+_format_version: "1.1"
+
+# The names `http-echo`, `tcp-echo` and `zipkin`
+# used in urls are served by docker-compose itself
+# in order to avoid hardcoding of IP addresses.
+services:
+  - name: http-echo-srv
+    url: http://http-echo:8080
+    routes:
+      - hosts: [ "echo.dev" ]
+    plugins:
+      - name: zipkin
+        config:
+          http_endpoint: http://zipkin:9411/api/v2/spans
+          sample_ratio: 1 # for testing purposes.
+
+
+
